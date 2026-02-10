@@ -44,10 +44,10 @@ KEY PYTHON CONCEPTS IN THIS FILE
    - def method(self, arg): is like public void Method(arg)
 """
 
-from datetime import datetime
+from datetime import datetime, UTC  # UTC replaces deprecated utcnow
 from typing import Optional  # For nullable types
 
-from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, create_engine
+from sqlalchemy import Column, Integer, Text, DateTime, ForeignKey
 from sqlalchemy.orm import declarative_base, relationship
 
 # =============================================================================
@@ -111,7 +111,7 @@ class ChatSession(Base):
     
     created_at = Column(
         DateTime, 
-        default=datetime.utcnow,  # Default value (like = DateTime.UtcNow)
+        default=lambda: datetime.now(UTC),  # Default value (like = DateTime.UtcNow)
         nullable=False
     )
     
@@ -129,7 +129,7 @@ class ChatSession(Base):
     
     messages = relationship(
         "ChatMessage",           # The related class name (as string to avoid circular imports)
-        back_populates="session", # The property on ChatMessage that references this
+        back_populates="session", # The property on ChatMessage that references this; remove back_populates if you don't need bidirectional navigation
         cascade="all, delete-orphan",  # Delete messages when session is deleted
         order_by="ChatMessage.timestamp"  # Always return messages in order
     )
@@ -198,7 +198,7 @@ class ChatMessage(Base):
     
     timestamp = Column(
         DateTime, 
-        default=datetime.utcnow, 
+        default=lambda: datetime.now(UTC), 
         nullable=False
     )
     

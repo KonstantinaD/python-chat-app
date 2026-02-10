@@ -35,7 +35,7 @@ The Session is your 'unit of work' - it tracks changes and commits them.
 """
 
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import sessionmaker
 from contextlib import contextmanager
 
 import config  # Our config module with DATABASE_URL
