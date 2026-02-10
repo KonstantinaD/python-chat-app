@@ -9,6 +9,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch
 
 import config  # Import our config module (like 'using MyApp.Config;' in C#)
+import chat_repository  # NEW: Our data access layer for persistence
 
 # =============================================================================
 # MODULE-LEVEL INITIALIZATION
@@ -105,6 +106,50 @@ def get_response(message: str, history: list[tuple[str, str]]) -> str:
     new_tokens = output_ids[:, input_ids.shape[1]:]
     
     response = tokenizer.decode(new_tokens[0], skip_special_tokens=True)
+    
+    return response
+
+
+def get_response_and_save(
+    message: str, 
+    history: list[tuple[str, str]], 
+    session_id: int
+) -> str:
+    """
+    Generate a response AND save it to the database.
+    
+    This wraps get_response() and adds persistence.
+    
+    Args:
+        message: The user's input text
+        history: List of previous (user_message, bot_response) tuples
+        session_id: The ID of the chat session to save to
+    
+    Returns:
+        The AI's response as a string
+    
+    ---
+    PYTHON CONCEPT: FUNCTION COMPOSITION
+    
+    This function composes (combines) two operations:
+    1. Generate response (get_response)
+    2. Save to database (chat_repository.save_message)
+    
+    This is a common pattern - build complex operations from simpler ones.
+    In C#, you might do this with method chaining or service composition.
+    
+    We keep get_response() separate so it can still be used without persistence
+    (useful for testing or if someone wants to use the model without a database).
+    """
+    # Generate the response using the existing function
+    response = get_response(message, history)
+    
+    # Save to database
+    chat_repository.save_message(
+        session_id=session_id,
+        user_message=message,
+        bot_response=response
+    )
     
     return response
 

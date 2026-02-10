@@ -8,12 +8,14 @@ Think of it like Blazor, but specifically designed for AI demos.
 import gradio as gr  # 'as gr' creates an alias (like 'using gr = Gradio;')
 
 import chat_service  # Our business logic module
+import chat_repository  # NEW: Data access for loading/saving chat history
+from database import init_db  # NEW: Database initialization function
 
 # =============================================================================
 # THE CHAT FUNCTION (Called by Gradio on each user message)
 # =============================================================================
 
-def chat(message: str, history: list[tuple[str, str]]) -> str:
+def chat(message: str, history: list[tuple[str, str]], session_id: int) -> str:
     """
     Handle a chat message and return a response.
     
@@ -21,6 +23,7 @@ def chat(message: str, history: list[tuple[str, str]]) -> str:
     the user sends a message. It passes:
     - message: The new message from the user
     - history: All previous (user, assistant) message pairs
+    - session_id: Our database session ID (passed via Gradio State)
     
     ---
     PYTHON CONCEPT: This is a 'callback function'
@@ -28,26 +31,95 @@ def chat(message: str, history: list[tuple[str, str]]) -> str:
     We're passing this function to ChatInterface, which will call it later.
     Like passing an Action<string, List<...>> delegate in C#.
     In Python, functions are 'first-class citizens' - they can be passed around.
+    
+    ---
+    NEW: We now use get_response_and_save() to persist messages!
     """
-    return chat_service.get_response(message, history)
+    return chat_service.get_response_and_save(message, history, session_id)
 
 
 # =============================================================================
 # CREATE THE GRADIO INTERFACE
 # =============================================================================
+#
+# NEW: We use Gradio's 'State' feature to maintain a session_id per user.
+# State is like storing data in session storage in a web app.
+#
+# How it works:
+# 1. When a user opens the app, create_session_state() runs, creating a new
+#    database session and returning its ID
+# 2. This ID is stored in gr.State and passed to our chat() function
+# 3. Each browser tab gets its own session (like separate users)
+#
+# In C#/Blazor terms:
+#    @inject ProtectedSessionStorage SessionStorage
+#    await SessionStorage.SetAsync("sessionId", newSessionId);
+# =============================================================================
 
-demo = gr.ChatInterface(
-    fn=chat,  # The function to call (our callback)
-    title="🤖 Python Chat App",
-    description="A conversational AI powered by Hugging Face DialoGPT",
-    examples=[
-        "Hello! How are you today?",
-        "Tell me a joke",
-        "What's your favorite color?",
-        "Can you help me learn Python?",
-    ],
-    theme="soft",  # Visual theme (try: "default", "soft", "glass")
-)
+def create_session_state() -> int:
+    """
+    Create a new chat session in the database and return its ID.
+    
+    This is called once when a user opens the app (Gradio State initialization).
+    
+    Returns:
+        The ID of the newly created session.
+    
+    ---
+    This is like creating a new user session when someone opens your web app.
+    The session_id is then stored in Gradio's State (like browser session storage).
+    """
+    session = chat_repository.create_session()
+    print(f"Created new chat session with ID: {session.id}")
+    return session.id
+
+
+# Using Blocks for more control over the UI and state management
+# Blocks is like having full control over your Blazor component layout
+with gr.Blocks(theme="soft", title="🤖 Python Chat App") as demo:
+    
+    # -------------------------------------------------------------------------
+    # gr.State - SESSION STORAGE
+    # -------------------------------------------------------------------------
+    #
+    # gr.State stores data per-user-session (each browser tab is separate).
+    # The 'value' parameter takes a FUNCTION that creates the initial value.
+    #
+    # IMPORTANT: We pass create_session_state (no parentheses!)
+    # - create_session_state  = the function itself (called later by Gradio)
+    # - create_session_state() = call it NOW and use the result (wrong!)
+    #
+    # This is like lazy initialization in C#:
+    #     Lazy<int> sessionId = new Lazy<int>(() => CreateSession());
+    # -------------------------------------------------------------------------
+    
+    session_state = gr.State(value=create_session_state)
+    
+    # UI Layout
+    gr.Markdown("# 🤖 Python Chat App")
+    gr.Markdown("A conversational AI powered by Hugging Face DialoGPT. Your chat history is now saved!")
+    
+    # -------------------------------------------------------------------------
+    # ChatInterface with State
+    # -------------------------------------------------------------------------
+    #
+    # 'additional_inputs' passes extra data to our chat function.
+    # Every time a message is sent, Gradio calls:
+    #     chat(message, history, session_state_value)
+    #
+    # This is how we get the session_id into our chat() function!
+    # -------------------------------------------------------------------------
+    
+    chat_interface = gr.ChatInterface(
+        fn=chat,
+        examples=[
+            "Hello! How are you today?",
+            "Tell me a joke",
+            "What's your favorite color?",
+            "Can you help me learn Python?",
+        ],
+        additional_inputs=[session_state],  # Pass session ID to chat function
+    )
 
 # =============================================================================
 # PYTHON CONCEPTS:
@@ -92,11 +164,33 @@ if __name__ == "__main__":
     They indicate special Python behavior. Like [SpecialName] in .NET.
     """
     
+    # -------------------------------------------------------------------------
+    # NEW: Initialize the database before starting the app!
+    # -------------------------------------------------------------------------
+    #
+    # This creates the database tables if they don't exist.
+    # Like running 'Update-Database' in Entity Framework.
+    #
+    # In C# Startup.cs, you might do:
+    #     using (var scope = app.Services.CreateScope())
+    #     {
+    #         var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    #         context.Database.Migrate();
+    #     }
+    # -------------------------------------------------------------------------
+    
+    print("\n" + "=" * 60)
+    print("Initializing Database...")
+    print("=" * 60 + "\n")
+    
+    init_db()  # Create tables if they don't exist
+    
     print("\n" + "=" * 60)
     print("Starting Chat Application...")
     print("=" * 60)
     print("\nOnce started, open your browser to: http://127.0.0.1:7860")
-    print("Press Ctrl+C to stop the server\n")
+    print("Press Ctrl+C to stop the server")
+    print("\n💾 Chat history will be saved to: chat_history.db\n")
     
     # Launch the Gradio web server
     demo.launch(

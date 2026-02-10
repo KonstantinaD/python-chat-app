@@ -43,3 +43,34 @@ HF_TOKEN: str | None = os.getenv("HF_TOKEN")
 
 # The | None syntax is Python 3.10+ for "nullable"
 # It's like: public string? HfToken in C#
+
+
+# =============================================================================
+# DATABASE CONFIGURATION
+# =============================================================================
+
+# Database connection string for SQLAlchemy
+# Format: "dialect+driver://username:password@host:port/database"
+#
+# For SQLite (file-based, no server needed):
+#   "sqlite:///filename.db"  - Creates a file in current directory
+#   "sqlite:////absolute/path/to/file.db"  - Absolute path (note: 4 slashes!)
+#
+# Compare to C# connection strings:
+#   SQLite:     "Data Source=chat_history.db"
+#   SQL Server: "Server=localhost;Database=MyDb;..."
+#
+# The three slashes (///) mean: "local file, relative path"
+DATABASE_URL: str = "sqlite:///chat_history.db"
+
+# =============================================================================
+# FUTURE: If you want to switch databases, just change DATABASE_URL!
+# =============================================================================
+#
+# PostgreSQL: "postgresql://user:password@localhost:5432/dbname"
+# MySQL:      "mysql+pymysql://user:password@localhost:3306/dbname"
+# SQL Server: "mssql+pyodbc://user:password@localhost/dbname?driver=ODBC+Driver+17"
+#
+# SQLAlchemy abstracts the differences - your Python code stays the same!
+# This is just like how EF Core lets you switch between SQL Server/SQLite/etc.
+# =============================================================================

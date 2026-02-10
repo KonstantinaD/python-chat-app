@@ -9,3 +9,15 @@ torch==2.5.1
 
 # Accelerate - optimizes model loading on your hardware
 accelerate==1.2.1
+
+# =============================================================================
+# DATABASE (Added for chat history persistence)
+# =============================================================================
+
+# SQLAlchemy - Python's most popular ORM (like Entity Framework in C#)
+# Handles database connections, queries, and object-relational mapping
+sqlalchemy==2.0.36
+
+# Note: SQLite is built into Python! No separate package needed.
+# SQLite is a file-based database - perfect for local development.
+# The database will be created as 'chat_history.db' in your project folder.
