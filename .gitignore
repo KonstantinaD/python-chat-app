@@ -1,0 +1,67 @@
+# =============================================================================
+# PYTHON .GITIGNORE
+# =============================================================================
+
+# Virtual environments (like bin/obj folders in .NET)
+venv/
+.venv/
+env/
+ENV/
+
+# Python cache files (compiled bytecode)
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+*.pyo
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+*.egg
+.eggs/
+*.whl
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+.pytest_cache/
+
+# Environment variables (may contain secrets - like appsettings.Development.json)
+.env
+.env.local
+.env.*.local
+
+# IDE settings
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Hugging Face / ML model cache (downloaded models - very large!)
+.cache/
+*.h5
+*.pkl
+*.pt
+*.bin
+
+# Logs
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Local development
+local_settings.py
+db.sqlite3
