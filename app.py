@@ -12,6 +12,21 @@ import chat_repository  # NEW: Data access for loading/saving chat history
 from database import init_db  # NEW: Database initialization function
 
 # =============================================================================
+# 🌐 HUGGING FACE SPACES DEPLOYMENT
+# =============================================================================
+# When deployed to HF Spaces, the app is IMPORTED as a module (not run directly).
+# This means __name__ == "__main__" block NEVER runs on Spaces!
+# So we must initialize the database here, at module load time.
+#
+# This code runs in BOTH environments (local + deployed) - that's fine!
+# init_db() is idempotent (safe to call multiple times).
+# =============================================================================
+
+print("Initializing Database...")
+init_db()
+print("Database ready!")
+
+# =============================================================================
 # THE CHAT FUNCTION (Called by Gradio on each user message)
 # =============================================================================
 
@@ -143,58 +158,56 @@ with gr.Blocks(theme="soft", title="🤖 Python Chat App") as demo:
 # ENTRY POINT
 # =============================================================================
 
-if __name__ == "__main__":
-    """
-    This block only runs when you execute this file directly:
-        python app.py
-    
-    It does NOT run when another file imports this module:
-        import app  # This would NOT trigger the block below
-    
-    ---
-    PYTHON CONCEPT: __name__ == "__main__"
-    
-    Every Python file has a special __name__ variable:
-    - When run directly: __name__ = "__main__"
-    - When imported: __name__ = "app" (the module name)
-    
-    This is like checking if you're in Program.Main() vs being used as a library.
-    
-    Why double underscores? They're called 'dunder' (double-under) methods.
-    They indicate special Python behavior. Like [SpecialName] in .NET.
-    """
-    
-    # -------------------------------------------------------------------------
-    # NEW: Initialize the database before starting the app!
-    # -------------------------------------------------------------------------
-    #
-    # This creates the database tables if they don't exist.
-    # Like running 'Update-Database' in Entity Framework.
-    #
-    # In C# Startup.cs, you might do:
-    #     using (var scope = app.Services.CreateScope())
-    #     {
-    #         var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    #         context.Database.Migrate();
-    #     }
-    # -------------------------------------------------------------------------
-    
-    print("\n" + "=" * 60)
-    print("Initializing Database...")
-    print("=" * 60 + "\n")
-    
-    init_db()  # Create tables if they don't exist
-    
-    print("\n" + "=" * 60)
-    print("Starting Chat Application...")
-    print("=" * 60)
-    print("\nOnce started, open your browser to: http://127.0.0.1:7860")
-    print("Press Ctrl+C to stop the server")
-    print("\n💾 Chat history will be saved to: chat_history.db\n")
-    
-    # Launch the Gradio web server
-    demo.launch(
-        server_name="127.0.0.1",  # localhost only (use "0.0.0.0" for network access)
-        server_port=7860,          # Default Gradio port
-        share=False,               # Set True to create a public URL (tunneled)
-    )
+# =============================================================================
+# 🌐 HUGGING FACE SPACES DEPLOYMENT - AUTO LAUNCH
+# =============================================================================
+# When deployed to HF Spaces, Gradio auto-detects the 'demo' variable and
+# launches it automatically. No explicit demo.launch() needed!
+#
+# HF Spaces runs this file as: import app (not python app.py)
+# So __name__ == "app", not "__main__"
+# =============================================================================
+
+# Simplified launch for Hugging Face Spaces (comment out for local development)
+demo.launch()
+
+# =============================================================================
+# 💻 LOCAL DEVELOPMENT - MANUAL LAUNCH
+# =============================================================================
+# Uncomment the block below and comment out demo.launch() above to run locally
+# with custom server settings.
+#
+# To run locally: python app.py
+# =============================================================================
+
+# if __name__ == "__main__":
+#     """
+#     This block only runs when you execute this file directly:
+#         python app.py
+#     
+#     It does NOT run when another file imports this module:
+#         import app  # This would NOT trigger the block below
+#     
+#     ---
+#     PYTHON CONCEPT: __name__ == "__main__"
+#     
+#     Every Python file has a special __name__ variable:
+#     - When run directly: __name__ = "__main__"
+#     - When imported: __name__ = "app" (the module name)
+#     
+#     This is like checking if you're in Program.Main() vs being used as a library.
+#     """
+#     
+#     print("\n" + "=" * 60)
+#     print("Starting Chat Application (LOCAL MODE)...")
+#     print("=" * 60)
+#     print("\nOnce started, open your browser to: http://127.0.0.1:7860")
+#     print("Press Ctrl+C to stop the server")
+#     print("\n💾 Chat history will be saved to: chat_history.db\n")
+#     
+#     # Launch the Gradio web server with LOCAL settings
+#     demo.launch(
+#         server_name="127.0.0.1",  # localhost only (use "0.0.0.0" for network access)
+#         server_port=7860,          # Default Gradio port
+#         share=False,               # Set True to create a public URL (tunneled)
+#     )

@@ -212,3 +212,33 @@ Functions are chosen here because:
 # .Include(x => x.Related)             | .options(joinedload(Model.related))
 #
 # =============================================================================
+
+**if __name__ == "__main__":**
+    """
+    This block only runs when you execute this file directly:
+        python app.py
+    
+    It does NOT run when another file imports this module:
+        import app  # This would NOT trigger the block below
+    
+    ---
+    PYTHON CONCEPT: __name__ == "__main__"
+    
+    Every Python file has a special __name__ variable:
+    - When run directly: __name__ = "__main__"
+    - When imported: __name__ = "app" (the module name)
+    
+    This is like checking if you're in Program.Main() vs being used as a library.
+    
+    Why double underscores? They're called 'dunder' (double-under) methods.
+    They indicate special Python behavior. Like [SpecialName] in .NET.
+    """
+
+**Hugging Face deployment**
+
+The YAML front matter (between --- in Readme ) is what Hugging Face Spaces reads:
+
+Field	Purpose
+sdk: gradio	Tells HF to use Gradio runtime
+sdk_version: 5.9.1	Must match your requirements.txt
+app_file: app.py	Entry point for your app
