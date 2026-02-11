@@ -51,7 +51,7 @@ requirements.txt
 README.md
 
 Or use Git:
-git clone https://huggingface.co/spaces/YOUR_USERNAME/your-space-name
+git clone https://huggingface.co/spaces/KoniD/ChatApp
 # Copy your files in, then:
 git add .
 git commit -m "Initial commit"
